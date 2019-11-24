@@ -39,13 +39,15 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    position: relative;
     align-items: center;
     justify-content: center;
 }
 
 .page{
     display: none;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
 }
 
 .active{
@@ -54,9 +56,9 @@ body {
 
 .searchbox
 {
+    width: 100%;
     text-align: center;
-    margin-top: 10%;
-    position:relative;
+    margin-top: 5%;
 }
 .box
 {
