@@ -43,6 +43,14 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+.page{
+    display: none;
+}
+
+.active{
+    display: block;
+}
 .searchbox
 {
     text-align: center;
