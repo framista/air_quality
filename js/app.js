@@ -1,19 +1,19 @@
 const app = {
     pages: [],
     show: new Event('show'),
-    init: function(){
+    init: function () {
         app.pages = document.querySelectorAll('.page');
-        app.pages.forEach((pg)=>{
+        app.pages.forEach((pg) => {
             pg.addEventListener('show', app.pageShown);
         })
-        
-        document.querySelectorAll('.nav-link').forEach((link)=>{
+
+        document.querySelectorAll('.nav-link').forEach((link) => {
             link.addEventListener('click', app.nav); //Dla więcej niż jednej strony "nav-link" będzie klasą obiektów nawigacji
         })
         history.replaceState({}, 'Home', '#home');
         window.addEventListener('popstate', app.poppin);
     },
-    nav: function(ev){
+    nav: function (ev) {
         ev.preventDefault();
         let currentPage = ev.target.getAttribute('data-target'); //W przypadku istnienia więcej niż 1 strony, "data-target" będzie nową właściwością z wartością, która jest nazwą id strony (np. strona ma id "oNas", to "data-target="oNas")
         document.querySelector('.active').classList.remove('active');
@@ -22,15 +22,15 @@ const app = {
         history.pushState({}, currentPage, `#${currentPage}`);
         document.getElementById(currentPage).dispatchEvent(app.show);
     },
-    pageShown: function(ev){
+    pageShown: function (ev) {
         console.log('Page', ev.target.id, 'is displaying'); //aktywuje się przy zmianie strony
 
     },
-    poppin: function(ev){
+    poppin: function (ev) {
         console.log(location.hash, 'popstate event');
         //Aktywuje sie przy kliknięciu nawigacji
         //Coś tam, żeby nieistniejąca strona się ładowała przy powrocie:
-        let hash = location.hash.replace('#' ,'');
+        let hash = location.hash.replace('#', '');
         document.querySelector('.active').classList.remove('active');
         document.getElementById(hash).classList.add('active');
         console.log(hash)
@@ -85,5 +85,61 @@ fetch(stationAllUrl, {
 
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
-    console.log(cityList.options[cityList.selectedIndex].value)
+    console.log(cityList.options[cityList.selectedIndex].value);
+    let stationId = cityList.options[cityList.selectedIndex].value;
+    const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/sensors/${stationId}`;
+    const p10 = document.getElementById('PM10');
+    const pm2 = document.getElementById('PM2.5');
+    const co = document.getElementById('CO');
+    const so2 = document.getElementById('SO2');
+    const no2 = document.getElementById('NO2');
+    const c6h6 = document.getElementById('C6H6');
+
+    fetch(sensorsUrl, {
+        method: 'GET',
+        mode: 'cors'
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+        })
+        .then((response) => {
+            console.log(response);
+            const paramAvailable = [];
+            response.forEach(element => {
+                console.log(element.id + " " + element.param.paramFormula + " " + element.param.idParam)
+                if (element.param.paramFormula === 'PM10') {
+                    p10.innerHTML = "PM10: " + element.param.idParam;
+                }
+                if (element.param.paramFormula === 'PM2.5') {
+                    pm2.innerHTML = " PM2.5: " + element.param.idParam;
+                }
+                if (element.param.paramFormula === 'CO') {
+                    co.innerHTML = "CO: " + element.param.idParam;
+                }
+                if (element.param.paramFormula === 'SO2') {
+                    so2.innerHTML = "SO2: " + element.param.idParam;
+                }
+                if (element.param.paramFormula === 'NO2') {
+                    no2.innerHTML = "NO2: " + element.param.idParam;
+                }
+                if (element.param.paramFormula === 'C6H6') {
+                    c6h6.innerHTML = "C6H6: " + element.param.idParam;
+                }
+                paramAvailable.push(element.param.paramFormula);
+            });
+
+            if (!paramAvailable.includes("PM10")) p10.innerHTML = "PM10: " + "--";
+            if (!paramAvailable.includes("PM2.5")) pm2.innerHTML = "PM2.5: " + "--";
+            if (!paramAvailable.includes("CO")) co.innerHTML = "CO: " + "--";
+            if (!paramAvailable.includes("SO2")) so2.innerHTML = "SO2: " + "--";
+            if (!paramAvailable.includes("NO2")) no2.innerHTML = "NO2: " + "--";
+            if (!paramAvailable.includes("C6H6")) c6h6.innerHTML = "C6H6: " + "--";
+
+
+        })
+        .catch((err) => {
+            console.log(err.message);
+        });
 })
