@@ -152,6 +152,17 @@ input[type="text"]
     border-radius:25px 0 0 25px;
 }
 
+select
+{
+    background: #fff;
+    width: 25%;
+    height: 30px;
+    border:none;
+    outline:none;
+    padding:0 20px;
+    border-radius:25px 0 0 25px;
+}
+
 input[type="submit"]
 {
     position: relative;
