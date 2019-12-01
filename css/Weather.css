@@ -39,15 +39,26 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    position: relative;
     align-items: center;
     justify-content: center;
 }
+
+.page{
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+}
+
+.active{
+    display: block;
+}
+
 .searchbox
 {
+    width: 100%;
     text-align: center;
     margin-top: 5%;
-    position:relative;
 }
 .box
 {
@@ -58,7 +69,7 @@ body {
 
     position:relative;
     position: center;
-    width: 60%;
+    width: 90%;
     height: 50%;
     background-color:rgba(0, 0, 0, 0.6);
     border-radius: 10px;
@@ -74,7 +85,7 @@ body {
     position: relative;
     color: white;
     background-color:rgba(0, 0, 0, 0.7);
-    width:50%;
+    width:60%;
     height:60%;
     float: left;
     margin-left: 30px;
@@ -83,10 +94,10 @@ body {
 .react
 {
     position: relative;
-    width:40%;
+    width:30%;
     height:70%;
     float: left;
-    margin-left: 30px;
+    margin-left: 0px;
     border-radius: 20px;
     text-align: center;
 
@@ -131,6 +142,17 @@ input
     border: 2px black;
 }
 input[type="text"]
+{
+    background: #fff;
+    width: 25%;
+    height: 30px;
+    border:none;
+    outline:none;
+    padding:0 20px;
+    border-radius:25px 0 0 25px;
+}
+
+select
 {
     background: #fff;
     width: 25%;
