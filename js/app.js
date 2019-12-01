@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', app.init);
 
 const cityList = document.getElementsByTagName('select')[0];
 const searchBtn = document.querySelector('input[type=submit]');
+const city = document.getElementsByClassName('city')[0];
 
 class Station {
     constructor(id, stationName, provinceName) {
@@ -85,7 +86,12 @@ fetch(stationAllUrl, {
 
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
-    console.log(cityList.options[cityList.selectedIndex].value);
+    stationAllTemp.some(el => {
+        if (el.stationId == cityList.options[cityList.selectedIndex].value){
+            city.innerHTML = el.stationName;
+        }
+        return el.stationId == cityList.options[cityList.selectedIndex].value;
+    })
     let stationId = cityList.options[cityList.selectedIndex].value;
     const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/sensors/${stationId}`;
     const p10 = document.getElementById('PM10');
@@ -105,10 +111,8 @@ searchBtn.addEventListener("click", e => {
             }
         })
         .then((response) => {
-            console.log(response);
             const paramAvailable = [];
             response.forEach(element => {
-                console.log(element.id + " " + element.param.paramFormula + " " + element.param.idParam)
                 if (element.param.paramFormula === 'PM10') {
                     p10.innerHTML = "PM10: " + element.param.idParam;
                 }
