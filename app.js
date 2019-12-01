@@ -1,7 +1,6 @@
 const cityList = document.getElementsByTagName('select')[0];
 const searchBtn = document.querySelector('input[type=submit]');
 
-console.log(cityList)
 class Station {
     constructor(id, stationName, provinceName) {
         this.stationId = id;
