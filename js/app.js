@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', app.init);
 
 const cityList = document.getElementsByTagName('select')[0];
 const searchBtn = document.querySelector('input[type=submit]');
-const city = document.getElementsByClassName('city')[0];
+const city = document.getElementsByClassName('location')[0];
 
 class Station {
     constructor(id, stationName, provinceName) {
@@ -70,36 +70,41 @@ fetch(stationAllUrl, {
         response.forEach(element => {
             // not every of cities has province name
             (element.city !== null) ? stationAllTemp.push(new Station(element.id, element.stationName, element.city.commune.provinceName)) : stationAllTemp.push(new Station(element.id, element.stationName, "--------"));
-            var last = stationAllTemp[stationAllTemp.length - 1];
-            var option = document.createElement("option");
-            option.setAttribute("value", element.id);
-            var node = document.createTextNode(`${last.stationName} ${last.provinceName}`);
-            option.appendChild(node);
-            cityList.appendChild(option);
+            addOptionToSelect(stationAllTemp, element);
         });
-        return stationAllTemp;
     })
     .catch((err) => {
         console.log(err.message);
     });
 
+function addOptionToSelect(stationAllTemp, element) {
+    var last = stationAllTemp[stationAllTemp.length - 1];
+    var option = document.createElement("option");
+    option.setAttribute("value", element.id);
+    var node = document.createTextNode(`${last.stationName} ${last.provinceName}`);
+    option.appendChild(node);
+    cityList.appendChild(option);
+}
 
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
+    let stationId = cityList.options[cityList.selectedIndex].value;
+    setLocalization(stationId);
+    searchValues(stationId);
+    searchIndexLevel(stationId);
+})
+
+function setLocalization(stationId) {
     stationAllTemp.some(el => {
-        if (el.stationId == cityList.options[cityList.selectedIndex].value){
+        if (el.stationId == stationId) {
             city.innerHTML = el.stationName;
         }
-        return el.stationId == cityList.options[cityList.selectedIndex].value;
+        return el.stationId == stationId; // break loop, when found
     })
-    let stationId = cityList.options[cityList.selectedIndex].value;
+}
+
+function searchValues(stationId) {
     const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/sensors/${stationId}`;
-    const p10 = document.getElementById('PM10');
-    const pm2 = document.getElementById('PM2.5');
-    const co = document.getElementById('CO');
-    const so2 = document.getElementById('SO2');
-    const no2 = document.getElementById('NO2');
-    const c6h6 = document.getElementById('C6H6');
 
     fetch(sensorsUrl, {
         method: 'GET',
@@ -111,39 +116,89 @@ searchBtn.addEventListener("click", e => {
             }
         })
         .then((response) => {
-            const paramAvailable = [];
-            response.forEach(element => {
-                if (element.param.paramFormula === 'PM10') {
-                    p10.innerHTML = "PM10: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'PM2.5') {
-                    pm2.innerHTML = " PM2.5: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'CO') {
-                    co.innerHTML = "CO: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'SO2') {
-                    so2.innerHTML = "SO2: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'NO2') {
-                    no2.innerHTML = "NO2: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'C6H6') {
-                    c6h6.innerHTML = "C6H6: " + element.param.idParam;
-                }
-                paramAvailable.push(element.param.paramFormula);
-            });
-
-            if (!paramAvailable.includes("PM10")) p10.innerHTML = "PM10: " + "--";
-            if (!paramAvailable.includes("PM2.5")) pm2.innerHTML = "PM2.5: " + "--";
-            if (!paramAvailable.includes("CO")) co.innerHTML = "CO: " + "--";
-            if (!paramAvailable.includes("SO2")) so2.innerHTML = "SO2: " + "--";
-            if (!paramAvailable.includes("NO2")) no2.innerHTML = "NO2: " + "--";
-            if (!paramAvailable.includes("C6H6")) c6h6.innerHTML = "C6H6: " + "--";
-
-
+            setParameters(response);
         })
         .catch((err) => {
             console.log(err.message);
         });
-})
+}
+
+function searchIndexLevel(stationId) {
+
+    const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/aqindex/getIndex/${stationId}`;
+
+    fetch(sensorsUrl, {
+        method: 'GET',
+        mode: 'cors'
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+        })
+        .then((response) => {
+            let indexLevel = response.stIndexLevel.indexLevelName;
+            setIndexLevel(indexLevel);
+        })
+        .catch((err) => {
+            console.log(err.message);
+        });
+}
+
+function setParameters(response) {
+    const paramsSpan = document.getElementsByClassName('section--value');
+    const paramAvailable = [];
+    response.forEach(element => {
+        if (element.param.paramFormula === 'PM10') {
+            paramsSpan[0].innerHTML = element.param.idParam;
+        }
+        if (element.param.paramFormula === 'PM2.5') {
+            paramsSpan[1].innerHTML = element.param.idParam;
+        }
+        if (element.param.paramFormula === 'CO') {
+            paramsSpan[2].innerHTML = element.param.idParam;
+        }
+        if (element.param.paramFormula === 'SO2') {
+            paramsSpan[3].innerHTML = element.param.idParam;
+        }
+        if (element.param.paramFormula === 'NO2') {
+            paramsSpan[4].innerHTML = element.param.idParam;
+        }
+        if (element.param.paramFormula === 'C6H6') {
+            paramsSpan[5].innerHTML = element.param.idParam;
+        }
+        paramAvailable.push(element.param.paramFormula);
+    });
+
+    if (!paramAvailable.includes("PM10")) paramsSpan[0].innerHTML = "---";
+    if (!paramAvailable.includes("PM2.5")) paramsSpan[1].innerHTML = "---";
+    if (!paramAvailable.includes("CO")) paramsSpan[2].innerHTML = "---";
+    if (!paramAvailable.includes("SO2")) paramsSpan[3].innerHTML = "---";
+    if (!paramAvailable.includes("NO2")) paramsSpan[4].innerHTML = "---";
+    if (!paramAvailable.includes("C6H6")) paramsSpan[5].innerHTML = "---";
+
+}
+
+function setIndexLevel(indexLevel) {
+    const indexLevelIcon = document.getElementsByClassName('img_level')[0];
+    console.log(indexLevel)
+    switch (indexLevel) {
+        case "Bardzo dobry":
+            indexLevelIcon.src = "css/img/verygood.jpg";
+            break;
+        case "Dobry":
+            indexLevelIcon.src = "css/img/good.jpg";
+            break;
+        case "Umiarkowany":
+            indexLevelIcon.src = "css/img/mild.jpg";
+            break;
+        case "Zły":
+            indexLevelIcon.src = "css/img/bad.jpg";
+            break;
+        case "Bardzo zły":
+            indexLevelIcon.src = "css/img/terrible.jpg";
+            break;
+        default:
+            indexLevelIcon.src = "css/img/nodata.jpg";
+    }
+}
