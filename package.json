@@ -1,0 +1,30 @@
+{
+  "name": "coderscamp_project_2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode development",
+    "start": "webpack-dev-server --output-public-path=/build/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akteamcoderscamp/coderscamp_project_2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akteamcoderscamp/coderscamp_project_2/issues"
+  },
+  "homepage": "https://github.com/akteamcoderscamp/coderscamp_project_2#readme",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.40",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.5",
+    "babel-preset-es2015": "^6.24.1",
+    "webpack": "^4.41.4",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {}
+}
