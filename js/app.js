@@ -43,6 +43,14 @@ document.addEventListener('DOMContentLoaded', app.init);
 const cityList = document.getElementsByTagName('select')[0];
 const searchBtn = document.querySelector('input[type=submit]');
 const city = document.getElementsByClassName('location')[0];
+const historyBox = document.querySelector('aside');
+var historyLocal = localStorage.getItem("history");
+const historyList = [];
+if (historyLocal) {
+    historyLocal.split(";").forEach(e => {
+        historyList.push(JSON.parse(e));
+    });
+}
 
 class Station {
     constructor(id, stationName, provinceName) {
@@ -52,10 +60,60 @@ class Station {
     }
 }
 
+class item {
+
+    constructor(stationID, stationCity, stationProvince) {
+        this.createDiv(stationID, stationCity, stationProvince);
+    }
+
+    createDiv(stationId, stationCity, stationProvince) {
+        let stationCity_h2 = document.createElement('h2');
+        stationCity_h2.innerHTML = stationCity;
+        let stationProvince_h4 = document.createElement('h4');
+        stationProvince_h4.innerHTML = stationProvince;
+        let locationInformationBox = document.createElement('div');
+        locationInformationBox.id = stationId;
+        locationInformationBox.classList.add('locationInformation');
+        let parameterBox = document.createElement('div');
+        let removeBtn = document.createElement('button');
+        removeBtn.classList.add('aside__btn');
+        removeBtn.innerHTML = "X"
+
+        historyBox.appendChild(locationInformationBox);
+        parameterBox.appendChild(stationCity_h2);
+        parameterBox.appendChild(stationProvince_h4);
+        locationInformationBox.appendChild(parameterBox);
+        locationInformationBox.appendChild(removeBtn);
+
+        removeBtn.addEventListener('click', (e) => this.remove(e, locationInformationBox));
+        locationInformationBox.addEventListener('click', (e) => this.showParameter(e))
+    }
+
+    remove(e, item) {
+        e.stopPropagation();
+        let stationId = e.target.parentNode.id;
+        historyBox.removeChild(item);
+        let index = historyList.findIndex( e => e.stationId === stationId);
+        historyList.splice(index, 1);
+        localStorage.setItem("history", historyList.map( e => JSON.stringify(e)).join(";"));
+    }
+
+    showParameter(e) {
+        let stationId = e.currentTarget.id;
+        setLocalization(stationId);
+        searchValues(stationId);
+        searchIndexLevel(stationId);
+    }
+
+}
+
+// add item from localStorage to aside
+if (historyLocal) {
+    historyList.forEach(e => new item(e.stationId, e.stationName, e.provinceName));
+}
+
 // find all station with station name and province name
-
 const stationAllUrl = 'https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/findAll';
-
 const stationAllTemp = [];
 fetch(stationAllUrl, {
     method: 'GET',
@@ -89,18 +147,32 @@ function addOptionToSelect(stationAllTemp, element) {
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
     let stationId = cityList.options[cityList.selectedIndex].value;
-    setLocalization(stationId);
+    let selectedLocation = setLocalization(stationId);
     searchValues(stationId);
     searchIndexLevel(stationId);
+    let isSaved = historyList.some(e => e.stationId == stationId);
+    if (!isSaved) {
+        saveToLocalStorage(stationId, selectedLocation[0], selectedLocation[1]);
+        new item(stationId, selectedLocation[0], selectedLocation[1]);
+    }
 })
 
 function setLocalization(stationId) {
+    const selectedLocation = [];
     stationAllTemp.some(el => {
         if (el.stationId == stationId) {
             city.innerHTML = el.stationName;
+            selectedLocation.push(el.stationName);
+            selectedLocation.push(el.provinceName.toLowerCase());
         }
-        return el.stationId == stationId; // break loop, when found
+        return el.stationId == stationId; 
     })
+    return selectedLocation;
+}
+
+function saveToLocalStorage(id, stationName, provinceName) {
+    historyList.push(new Station(id, stationName, provinceName));
+    localStorage.setItem("history", historyList.map( e => JSON.stringify(e)).join(";"));
 }
 
 function searchValues(stationId) {
@@ -181,7 +253,6 @@ function setParameters(response) {
 
 function setIndexLevel(indexLevel) {
     const indexLevelIcon = document.getElementsByClassName('img_level')[0];
-    console.log(indexLevel)
     switch (indexLevel) {
         case "Bardzo dobry":
             indexLevelIcon.src = "css/img/verygood.jpg";
@@ -202,3 +273,5 @@ function setIndexLevel(indexLevel) {
             indexLevelIcon.src = "css/img/nodata.jpg";
     }
 }
+
+
