@@ -1,3 +1,9 @@
+import Item from './item'
+import Station from './station'
+import setIndexLevel from './setIndexLevel'
+import setParameters from './setParameters'
+import addOptionToSelect from './addOptionToSelect'
+
 const app = {
     pages: [],
     show: new Event('show'),
@@ -52,64 +58,9 @@ if (historyLocal) {
     });
 }
 
-class Station {
-    constructor(id, stationName, provinceName) {
-        this.stationId = id;
-        this.stationName = stationName;
-        this.provinceName = provinceName;
-    }
-}
-
-class item {
-
-    constructor(stationID, stationCity, stationProvince) {
-        this.createDiv(stationID, stationCity, stationProvince);
-    }
-
-    createDiv(stationId, stationCity, stationProvince) {
-        let stationCity_h2 = document.createElement('h2');
-        stationCity_h2.innerHTML = stationCity;
-        let stationProvince_h4 = document.createElement('h4');
-        stationProvince_h4.innerHTML = stationProvince;
-        let locationInformationBox = document.createElement('div');
-        locationInformationBox.id = stationId;
-        locationInformationBox.classList.add('locationInformation');
-        let parameterBox = document.createElement('div');
-        let removeBtn = document.createElement('button');
-        removeBtn.classList.add('aside__btn');
-        removeBtn.innerHTML = "X"
-
-        historyBox.appendChild(locationInformationBox);
-        parameterBox.appendChild(stationCity_h2);
-        parameterBox.appendChild(stationProvince_h4);
-        locationInformationBox.appendChild(parameterBox);
-        locationInformationBox.appendChild(removeBtn);
-
-        removeBtn.addEventListener('click', (e) => this.remove(e, locationInformationBox));
-        locationInformationBox.addEventListener('click', (e) => this.showParameter(e))
-    }
-
-    remove(e, item) {
-        e.stopPropagation();
-        let stationId = e.target.parentNode.id;
-        historyBox.removeChild(item);
-        let index = historyList.findIndex( e => e.stationId === stationId);
-        historyList.splice(index, 1);
-        localStorage.setItem("history", historyList.map( e => JSON.stringify(e)).join(";"));
-    }
-
-    showParameter(e) {
-        let stationId = e.currentTarget.id;
-        setLocalization(stationId);
-        searchValues(stationId);
-        searchIndexLevel(stationId);
-    }
-
-}
-
 // add item from localStorage to aside
 if (historyLocal) {
-    historyList.forEach(e => new item(e.stationId, e.stationName, e.provinceName));
+    historyList.forEach(e => new Item(e.stationId, e.stationName, e.provinceName));
 }
 
 // find all station with station name and province name
@@ -135,14 +86,6 @@ fetch(stationAllUrl, {
         console.log(err.message);
     });
 
-function addOptionToSelect(stationAllTemp, element) {
-    var last = stationAllTemp[stationAllTemp.length - 1];
-    var option = document.createElement("option");
-    option.setAttribute("value", element.id);
-    var node = document.createTextNode(`${last.stationName} ${last.provinceName}`);
-    option.appendChild(node);
-    cityList.appendChild(option);
-}
 
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
@@ -153,7 +96,7 @@ searchBtn.addEventListener("click", e => {
     let isSaved = historyList.some(e => e.stationId == stationId);
     if (!isSaved) {
         saveToLocalStorage(stationId, selectedLocation[0], selectedLocation[1]);
-        new item(stationId, selectedLocation[0], selectedLocation[1]);
+        new Item(stationId, selectedLocation[0], selectedLocation[1]);
     }
 })
 
@@ -216,62 +159,3 @@ function searchIndexLevel(stationId) {
             console.log(err.message);
         });
 }
-
-function setParameters(response) {
-    const paramsSpan = document.getElementsByClassName('section--value');
-    const paramAvailable = [];
-    response.forEach(element => {
-        if (element.param.paramFormula === 'PM10') {
-            paramsSpan[0].innerHTML = element.param.idParam;
-        }
-        if (element.param.paramFormula === 'PM2.5') {
-            paramsSpan[1].innerHTML = element.param.idParam;
-        }
-        if (element.param.paramFormula === 'CO') {
-            paramsSpan[2].innerHTML = element.param.idParam;
-        }
-        if (element.param.paramFormula === 'SO2') {
-            paramsSpan[3].innerHTML = element.param.idParam;
-        }
-        if (element.param.paramFormula === 'NO2') {
-            paramsSpan[4].innerHTML = element.param.idParam;
-        }
-        if (element.param.paramFormula === 'C6H6') {
-            paramsSpan[5].innerHTML = element.param.idParam;
-        }
-        paramAvailable.push(element.param.paramFormula);
-    });
-
-    if (!paramAvailable.includes("PM10")) paramsSpan[0].innerHTML = "---";
-    if (!paramAvailable.includes("PM2.5")) paramsSpan[1].innerHTML = "---";
-    if (!paramAvailable.includes("CO")) paramsSpan[2].innerHTML = "---";
-    if (!paramAvailable.includes("SO2")) paramsSpan[3].innerHTML = "---";
-    if (!paramAvailable.includes("NO2")) paramsSpan[4].innerHTML = "---";
-    if (!paramAvailable.includes("C6H6")) paramsSpan[5].innerHTML = "---";
-
-}
-
-function setIndexLevel(indexLevel) {
-    const indexLevelIcon = document.getElementsByClassName('img_level')[0];
-    switch (indexLevel) {
-        case "Bardzo dobry":
-            indexLevelIcon.src = "css/img/verygood.jpg";
-            break;
-        case "Dobry":
-            indexLevelIcon.src = "css/img/good.jpg";
-            break;
-        case "Umiarkowany":
-            indexLevelIcon.src = "css/img/mild.jpg";
-            break;
-        case "Zły":
-            indexLevelIcon.src = "css/img/bad.jpg";
-            break;
-        case "Bardzo zły":
-            indexLevelIcon.src = "css/img/terrible.jpg";
-            break;
-        default:
-            indexLevelIcon.src = "css/img/nodata.jpg";
-    }
-}
-
-
