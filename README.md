@@ -17,7 +17,6 @@ $ cd coderscamp_project_2
 
 # Install dependencies and build app
 $ npm install
-$ npm build
 
 # Run the app
 $ npm start
