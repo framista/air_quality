@@ -1,3 +1,9 @@
+import Item from './item'
+import Station from './station'
+import setIndexLevel from './setIndexLevel'
+import setParameters from './setParameters'
+import addOptionToSelect from './addOptionToSelect'
+
 const app = {
     pages: [],
     show: new Event('show'),
@@ -42,20 +48,23 @@ document.addEventListener('DOMContentLoaded', app.init);
 
 const cityList = document.getElementsByTagName('select')[0];
 const searchBtn = document.querySelector('input[type=submit]');
-const city = document.getElementsByClassName('city')[0];
+const city = document.getElementsByClassName('location')[0];
+const historyBox = document.querySelector('aside');
+var historyLocal = localStorage.getItem("history");
+const historyList = [];
+if (historyLocal) {
+    historyLocal.split(";").forEach(e => {
+        historyList.push(JSON.parse(e));
+    });
+}
 
-class Station {
-    constructor(id, stationName, provinceName) {
-        this.stationId = id;
-        this.stationName = stationName;
-        this.provinceName = provinceName;
-    }
+// add item from localStorage to aside
+if (historyLocal) {
+    historyList.forEach(e => new Item(e.stationId, e.stationName, e.provinceName));
 }
 
 // find all station with station name and province name
-
 const stationAllUrl = 'https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/findAll';
-
 const stationAllTemp = [];
 fetch(stationAllUrl, {
     method: 'GET',
@@ -70,14 +79,8 @@ fetch(stationAllUrl, {
         response.forEach(element => {
             // not every of cities has province name
             (element.city !== null) ? stationAllTemp.push(new Station(element.id, element.stationName, element.city.commune.provinceName)) : stationAllTemp.push(new Station(element.id, element.stationName, "--------"));
-            var last = stationAllTemp[stationAllTemp.length - 1];
-            var option = document.createElement("option");
-            option.setAttribute("value", element.id);
-            var node = document.createTextNode(`${last.stationName} ${last.provinceName}`);
-            option.appendChild(node);
-            cityList.appendChild(option);
+            addOptionToSelect(stationAllTemp, element);
         });
-        return stationAllTemp;
     })
     .catch((err) => {
         console.log(err.message);
@@ -86,20 +89,37 @@ fetch(stationAllUrl, {
 
 searchBtn.addEventListener("click", e => {
     e.preventDefault();
-    stationAllTemp.some(el => {
-        if (el.stationId == cityList.options[cityList.selectedIndex].value){
-            city.innerHTML = el.stationName;
-        }
-        return el.stationId == cityList.options[cityList.selectedIndex].value;
-    })
     let stationId = cityList.options[cityList.selectedIndex].value;
+    let selectedLocation = setLocalization(stationId);
+    searchValues(stationId);
+    searchIndexLevel(stationId);
+    let isSaved = historyList.some(e => e.stationId == stationId);
+    if (!isSaved) {
+        saveToLocalStorage(stationId, selectedLocation[0], selectedLocation[1]);
+        new Item(stationId, selectedLocation[0], selectedLocation[1]);
+    }
+})
+
+function setLocalization(stationId) {
+    const selectedLocation = [];
+    stationAllTemp.some(el => {
+        if (el.stationId == stationId) {
+            city.innerHTML = el.stationName;
+            selectedLocation.push(el.stationName);
+            selectedLocation.push(el.provinceName.toLowerCase());
+        }
+        return el.stationId == stationId; 
+    })
+    return selectedLocation;
+}
+
+function saveToLocalStorage(id, stationName, provinceName) {
+    historyList.push(new Station(id, stationName, provinceName));
+    localStorage.setItem("history", historyList.map( e => JSON.stringify(e)).join(";"));
+}
+
+function searchValues(stationId) {
     const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/station/sensors/${stationId}`;
-    const p10 = document.getElementById('PM10');
-    const pm2 = document.getElementById('PM2.5');
-    const co = document.getElementById('CO');
-    const so2 = document.getElementById('SO2');
-    const no2 = document.getElementById('NO2');
-    const c6h6 = document.getElementById('C6H6');
 
     fetch(sensorsUrl, {
         method: 'GET',
@@ -111,39 +131,31 @@ searchBtn.addEventListener("click", e => {
             }
         })
         .then((response) => {
-            const paramAvailable = [];
-            response.forEach(element => {
-                if (element.param.paramFormula === 'PM10') {
-                    p10.innerHTML = "PM10: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'PM2.5') {
-                    pm2.innerHTML = " PM2.5: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'CO') {
-                    co.innerHTML = "CO: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'SO2') {
-                    so2.innerHTML = "SO2: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'NO2') {
-                    no2.innerHTML = "NO2: " + element.param.idParam;
-                }
-                if (element.param.paramFormula === 'C6H6') {
-                    c6h6.innerHTML = "C6H6: " + element.param.idParam;
-                }
-                paramAvailable.push(element.param.paramFormula);
-            });
-
-            if (!paramAvailable.includes("PM10")) p10.innerHTML = "PM10: " + "--";
-            if (!paramAvailable.includes("PM2.5")) pm2.innerHTML = "PM2.5: " + "--";
-            if (!paramAvailable.includes("CO")) co.innerHTML = "CO: " + "--";
-            if (!paramAvailable.includes("SO2")) so2.innerHTML = "SO2: " + "--";
-            if (!paramAvailable.includes("NO2")) no2.innerHTML = "NO2: " + "--";
-            if (!paramAvailable.includes("C6H6")) c6h6.innerHTML = "C6H6: " + "--";
-
-
+            setParameters(response);
         })
         .catch((err) => {
             console.log(err.message);
         });
-})
+}
+
+function searchIndexLevel(stationId) {
+
+    const sensorsUrl = `https://cors-anywhere.herokuapp.com/http://api.gios.gov.pl/pjp-api/rest/aqindex/getIndex/${stationId}`;
+
+    fetch(sensorsUrl, {
+        method: 'GET',
+        mode: 'cors'
+    })
+        .then((response) => {
+            if (response.ok) {
+                return response.json();
+            }
+        })
+        .then((response) => {
+            let indexLevel = response.stIndexLevel.indexLevelName;
+            setIndexLevel(indexLevel);
+        })
+        .catch((err) => {
+            console.log(err.message);
+        });
+}
