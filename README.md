@@ -1,7 +1,7 @@
 # Air quality assessment
 
 ## General info
-Application to check the quality of cities in Poland. Data from api available on https://powietrze.gios.gov.pl/pjp/content/api
+Application to check the air quality of cities in Poland. Data from api available on https://powietrze.gios.gov.pl/pjp/content/api
 ## Technologies
 * JavaScript
 * CSS3
