@@ -24,6 +24,9 @@ $ npm start
 
 Go to http://localhost:8080/weather.html
 
+## Demo
+https://framista.github.io/coderscamp_project_2/#home
+
 ## Features
 * storing searched cities in local storage
 * showing history of searching
