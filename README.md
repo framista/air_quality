@@ -25,7 +25,7 @@ $ npm start
 Go to http://localhost:8080/weather.html
 
 ## Demo
-https://framista.github.io/coderscamp_project_2/#home
+https://framista.github.io/air_quality
 
 ## Features
 * storing searched cities in local storage
