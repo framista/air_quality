@@ -196,6 +196,7 @@ aside {
     align-items: center;
     padding: 0.5em 1.8em;
     border-radius: 5px;
+    cursor: pointer;
 }
 
 .aside__btn {
